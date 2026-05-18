@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import ast; tree = ast.parse\\(open\\('ui/main_window.py'\\).read\\(\\)\\); names=[n.name for n in ast.walk\\(tree\\) if isinstance\\(n,ast.FunctionDef\\)]; print\\('rebuild_profile_menu' in names, '_sidebar_position_retries' in open\\('ui/main_window.py'\\).read\\(\\)\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('ui/main_window.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python3 -m compileall -q app.py dual_audio_player.py player ui)",
+      "Bash(python3 -m pytest -q)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(python3 -m compileall -q player ui app.py dual_audio_player.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -m pytest --collect-only)",
+      "Bash(python3 -m pytest)",
+      "Bash(python3 -c \"from player.playback.session import PlaybackSession; from player.devices import DeviceMonitor; from ui.subtitle_panel import SubtitlePanel; print\\('imports OK'\\)\")"
+    ]
+  }
+}
