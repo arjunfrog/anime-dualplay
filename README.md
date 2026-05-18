@@ -53,10 +53,10 @@ If AV1 video does not display, make sure `gstreamer1.0-libav` is installed. On s
 
 ## Using the GUI
 
-Unpack .zip or clone repo
-Install deps
-Open folder in a terminal and run python3 app.py
-Thats it
+Unpack .zip or clone repo  
+Install deps  
+Open folder in a terminal and run python3 app.py  
+Thats it  
 
 options/settings in the GUI are all pretty self explanitory 
 
