@@ -51,6 +51,17 @@ sudo apt install \
 
 If AV1 video does not display, make sure `gstreamer1.0-libav` is installed. On some systems, hardware AV1 decode may still be awkward; testing with an H.264/H.265 MKV first is useful.
 
+## Using the GUI
+
+Unpack .zip or clone repo
+Install deps
+Open folder in a terminal and run python3 app.py
+Thats it
+
+options/settings in the GUI are all pretty self explanitory 
+
+# CLI
+
 ## List audio outputs
 
 ```bash
