@@ -89,6 +89,7 @@ class MainWindow(Gtk.Window):
         self._video_context_menu: Optional[Gtk.Menu] = None
 
         self._sidebar_visible = True
+        self._listeners_visible = self._config_data.get("listeners_visible", True)
         self._sidebar_collapsed_by_user = False
         self._saved_paned_position: Optional[int] = None
         self._paned: Optional[Gtk.Paned] = None
@@ -196,7 +197,10 @@ class MainWindow(Gtk.Window):
         self._controls.set_controls_sensitive(False)
         bottom_area.pack_start(self._controls, False, False, 0)
 
-        routing_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self._routing_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self._routing_box.set_no_show_all(True)
+        if self._listeners_visible:
+            self._routing_box.show()
         
         # Listener A panel
         self._panel_a = RoutingPanel("listener_a", "Listener A")
@@ -205,7 +209,7 @@ class MainWindow(Gtk.Window):
         self._panel_a.set_volume_callback(self._on_listener_volume_changed)
         self._panel_a.set_delay_callback(self._on_listener_delay_changed)
         self._panel_a.set_refresh_callback(self._on_refresh_sinks_for)
-        routing_box.pack_start(self._panel_a, True, True, 0)
+        self._routing_box.pack_start(self._panel_a, True, True, 0)
 
         # Listener B panel
         self._panel_b = RoutingPanel("listener_b", "Listener B")
@@ -214,9 +218,9 @@ class MainWindow(Gtk.Window):
         self._panel_b.set_volume_callback(self._on_listener_volume_changed)
         self._panel_b.set_delay_callback(self._on_listener_delay_changed)
         self._panel_b.set_refresh_callback(self._on_refresh_sinks_for)
-        routing_box.pack_start(self._panel_b, True, True, 0)
+        self._routing_box.pack_start(self._panel_b, True, True, 0)
         
-        bottom_area.pack_start(routing_box, False, False, 0)
+        bottom_area.pack_start(self._routing_box, False, False, 0)
 
         # Video delay control
         video_delay_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -303,6 +307,12 @@ class MainWindow(Gtk.Window):
         self._sidebar_menu_item.set_active(self._sidebar_visible)
         self._sidebar_menu_item.connect("activate", self._on_sidebar_menu_toggle)
         view_menu.append(self._sidebar_menu_item)
+        
+        self._listeners_menu_item = Gtk.CheckMenuItem(label="Show Listeners Panel")
+        self._listeners_menu_item.set_active(self._listeners_visible)
+        self._listeners_menu_item.connect("activate", self._on_listeners_menu_toggle)
+        view_menu.append(self._listeners_menu_item)
+        
         view_menu.append(Gtk.SeparatorMenuItem())
 
         theme_menu_item = Gtk.MenuItem(label="Theme")
@@ -428,6 +438,15 @@ class MainWindow(Gtk.Window):
         else:
             self._sidebar_collapsed_by_user = True
             self._hide_sidebar()
+
+    def _on_listeners_menu_toggle(self, item: Gtk.CheckMenuItem) -> None:
+        self._listeners_visible = item.get_active()
+        self._config_data["listeners_visible"] = self._listeners_visible
+        self._save_config()
+        if self._listeners_visible:
+            self._routing_box.show()
+        else:
+            self._routing_box.hide()
 
     def _show_sidebar(self) -> None:
         if self._sidebar_visible:
