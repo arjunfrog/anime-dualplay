@@ -165,12 +165,24 @@ class MainWindow(Gtk.Window):
 
         left_pane.pack_start(file_row, False, False, 0)
 
+        vpaned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
+        vpaned.set_wide_handle(True)
+        left_pane.pack_start(vpaned, True, True, 0)
+
         # Video area
         self._video_widget = VideoWidget()
         self._video_widget.connect("button-press-event", self._on_video_button_press)
         video_frame = Gtk.Frame()
         video_frame.add(self._video_widget)
-        left_pane.pack_start(video_frame, True, True, 0)
+        vpaned.pack1(video_frame, resize=True, shrink=False)
+
+        # Bottom area with scrolling so it can be shrunk
+        scrolled_bottom = Gtk.ScrolledWindow()
+        scrolled_bottom.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        
+        bottom_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        scrolled_bottom.add(bottom_area)
+        vpaned.pack2(scrolled_bottom, resize=False, shrink=False)
 
         # Playback controls
         self._controls = PlaybackControls()
@@ -182,7 +194,7 @@ class MainWindow(Gtk.Window):
         self._controls.set_next_callback(self._on_skip_forward)
         self._controls.set_sidebar_toggle_callback(self._on_toggle_sidebar)
         self._controls.set_controls_sensitive(False)
-        left_pane.pack_start(self._controls, False, False, 0)
+        bottom_area.pack_start(self._controls, False, False, 0)
 
         routing_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         
@@ -204,7 +216,7 @@ class MainWindow(Gtk.Window):
         self._panel_b.set_refresh_callback(self._on_refresh_sinks_for)
         routing_box.pack_start(self._panel_b, True, True, 0)
         
-        left_pane.pack_start(routing_box, False, False, 0)
+        bottom_area.pack_start(routing_box, False, False, 0)
 
         # Video delay control
         video_delay_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -223,19 +235,19 @@ class MainWindow(Gtk.Window):
         video_delay_row.pack_start(self._video_delay_spin, False, False, 0)
         video_delay_row.pack_start(Gtk.Label(label="ms"), False, False, 0)
 
-        left_pane.pack_start(video_delay_row, False, False, 0)
+        bottom_area.pack_start(video_delay_row, False, False, 0)
         self._video_delay_row = video_delay_row
 
         # Subtitle panel
         self._subtitle_panel = SubtitlePanel()
         self._subtitle_panel.set_enable_callback(self._on_subtitle_enable_changed)
         self._subtitle_panel.set_track_callback(self._on_subtitle_track_changed)
-        left_pane.pack_start(self._subtitle_panel, False, False, 0)
+        bottom_area.pack_start(self._subtitle_panel, False, False, 0)
 
-        # Status bar (moved to bottom of left pane)
+        # Status bar
         self._statusbar = Gtk.Statusbar()
         self._statusbar_context_id = self._statusbar.get_context_id("main")
-        left_pane.pack_end(self._statusbar, False, False, 0)
+        bottom_area.pack_end(self._statusbar, False, False, 0)
 
         self._paned.pack1(left_pane, resize=True, shrink=True)
 

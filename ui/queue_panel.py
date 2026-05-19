@@ -192,20 +192,32 @@ class QueuePanel(Gtk.Frame):
     def _build_toolbar(self) -> Gtk.Box:
         toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
 
-        add_btn = Gtk.Button(label="+ Add Files")
+        add_btn = Gtk.Button()
         add_btn.set_tooltip_text("Add files to the queue")
+        if self._sidebar_mode:
+            add_btn.set_image(Gtk.Image.new_from_icon_name("list-add-symbolic", Gtk.IconSize.BUTTON))
+        else:
+            add_btn.set_label("+ Add Files")
         add_btn.connect("clicked", self._on_add_clicked)
-        toolbar.pack_start(add_btn, False, False, 0)
+        toolbar.pack_start(add_btn, True, True, 0)
 
-        remove_btn = Gtk.Button(label="- Remove")
+        remove_btn = Gtk.Button()
         remove_btn.set_tooltip_text("Remove selected files from the queue")
+        if self._sidebar_mode:
+            remove_btn.set_image(Gtk.Image.new_from_icon_name("list-remove-symbolic", Gtk.IconSize.BUTTON))
+        else:
+            remove_btn.set_label("- Remove")
         remove_btn.connect("clicked", self._on_remove_clicked)
-        toolbar.pack_start(remove_btn, False, False, 0)
+        toolbar.pack_start(remove_btn, True, True, 0)
 
-        clear_btn = Gtk.Button(label="Clear")
+        clear_btn = Gtk.Button()
         clear_btn.set_tooltip_text("Clear the entire queue")
+        if self._sidebar_mode:
+            clear_btn.set_image(Gtk.Image.new_from_icon_name("edit-clear-symbolic", Gtk.IconSize.BUTTON))
+        else:
+            clear_btn.set_label("Clear")
         clear_btn.connect("clicked", self._on_clear_clicked)
-        toolbar.pack_start(clear_btn, False, False, 0)
+        toolbar.pack_start(clear_btn, True, True, 0)
 
         return toolbar
 
