@@ -155,6 +155,7 @@ class RoutingPanel(Gtk.Frame):
         self._volume_scale.set_value(100)
         self._volume_scale.set_hexpand(True)
         self._volume_scale.set_draw_value(True)
+        self._volume_scale.set_value_pos(Gtk.PositionType.RIGHT)
         self._volume_scale.connect("value-changed", self._on_volume_changed_internal)
         grid.attach(self._volume_scale, 1, row, 1, 1)
         row += 1

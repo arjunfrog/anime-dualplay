@@ -184,6 +184,8 @@ class MainWindow(Gtk.Window):
         self._controls.set_controls_sensitive(False)
         left_pane.pack_start(self._controls, False, False, 0)
 
+        routing_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        
         # Listener A panel
         self._panel_a = RoutingPanel("listener_a", "Listener A")
         self._panel_a.set_track_callback(self._on_listener_track_changed)
@@ -191,7 +193,7 @@ class MainWindow(Gtk.Window):
         self._panel_a.set_volume_callback(self._on_listener_volume_changed)
         self._panel_a.set_delay_callback(self._on_listener_delay_changed)
         self._panel_a.set_refresh_callback(self._on_refresh_sinks_for)
-        left_pane.pack_start(self._panel_a, False, False, 0)
+        routing_box.pack_start(self._panel_a, True, True, 0)
 
         # Listener B panel
         self._panel_b = RoutingPanel("listener_b", "Listener B")
@@ -200,7 +202,9 @@ class MainWindow(Gtk.Window):
         self._panel_b.set_volume_callback(self._on_listener_volume_changed)
         self._panel_b.set_delay_callback(self._on_listener_delay_changed)
         self._panel_b.set_refresh_callback(self._on_refresh_sinks_for)
-        left_pane.pack_start(self._panel_b, False, False, 0)
+        routing_box.pack_start(self._panel_b, True, True, 0)
+        
+        left_pane.pack_start(routing_box, False, False, 0)
 
         # Video delay control
         video_delay_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)

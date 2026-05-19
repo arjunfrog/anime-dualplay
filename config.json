@@ -30,7 +30,7 @@
     "thinkpad_usb_dac": {
       "listenerA": {
         "label": "Listener A",
-        "sink": "BuiltInSpeakerDevice",
+        "sink": "~:AMS2_StackedOutput:0",
         "audioTrack": 0,
         "delayMs": 0,
         "volume": 1.0
@@ -48,7 +48,7 @@
         "delayMs": 0
       },
       "subtitles": {
-        "enabled": true,
+        "enabled": false,
         "subtitleTrack": 0
       }
     }
