@@ -199,8 +199,6 @@ class MainWindow(Gtk.Window):
 
         self._routing_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self._routing_box.set_no_show_all(True)
-        if self._listeners_visible:
-            self._routing_box.show()
         
         # Listener A panel
         self._panel_a = RoutingPanel("listener_a", "Listener A")
@@ -220,6 +218,9 @@ class MainWindow(Gtk.Window):
         self._panel_b.set_refresh_callback(self._on_refresh_sinks_for)
         self._routing_box.pack_start(self._panel_b, True, True, 0)
         
+        if self._listeners_visible:
+            self._routing_box.show_all()
+            
         bottom_area.pack_start(self._routing_box, False, False, 0)
 
         # Video delay control
@@ -416,7 +417,7 @@ class MainWindow(Gtk.Window):
             return
         theme_val = item.get_name()
         set_theme_preference(self._config_data, theme_val)
-        self._save_config()
+        save_config_file(self._config_path, self._config_data)
         self._apply_theme()
 
     # ------------------------------------------------------------------
@@ -442,9 +443,9 @@ class MainWindow(Gtk.Window):
     def _on_listeners_menu_toggle(self, item: Gtk.CheckMenuItem) -> None:
         self._listeners_visible = item.get_active()
         self._config_data["listeners_visible"] = self._listeners_visible
-        self._save_config()
+        save_config_file(self._config_path, self._config_data)
         if self._listeners_visible:
-            self._routing_box.show()
+            self._routing_box.show_all()
         else:
             self._routing_box.hide()
 
