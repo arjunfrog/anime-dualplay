@@ -178,6 +178,19 @@ def set_default_audio_language(data: dict, language: str) -> None:
     data["default_audio_language"] = language or ""
 
 
+def get_theme_preference(data: dict) -> str:
+    """Return theme preference: 'system', 'light', or 'dark'."""
+    val = data.get("theme")
+    if val in ("light", "dark"):
+        return val
+    return "system"
+
+
+def set_theme_preference(data: dict, theme: str) -> None:
+    if theme in ("light", "dark", "system"):
+        data["theme"] = theme
+
+
 def get_subtitle_style(data: dict) -> SubtitleStyle:
     raw = data.get("subtitle_style") or {}
     style = SubtitleStyle()

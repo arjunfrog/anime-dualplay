@@ -30,7 +30,10 @@ from player.config import (
     get_default_audio_language,
     set_default_audio_language,
     get_subtitle_style,
+    get_theme_preference,
+    set_theme_preference,
 )
+from player.platform import is_system_dark_mode
 from player.models import PlayerConfig, MediaInfo, SinkInfo
 from player.inspector import discover_media
 from player.devices import get_audio_sinks, DeviceMonitor, BT_ICON
@@ -125,6 +128,8 @@ class MainWindow(Gtk.Window):
         self._device_monitor = DeviceMonitor(poll_interval_ms=3000)
         self._device_monitor.subscribe(self._on_hotplug_device_change)
         self._device_monitor.start()
+        
+        self._apply_theme()
 
     # ------------------------------------------------------------------
     # UI construction
@@ -282,6 +287,28 @@ class MainWindow(Gtk.Window):
         self._sidebar_menu_item.set_active(self._sidebar_visible)
         self._sidebar_menu_item.connect("activate", self._on_sidebar_menu_toggle)
         view_menu.append(self._sidebar_menu_item)
+        view_menu.append(Gtk.SeparatorMenuItem())
+
+        theme_menu_item = Gtk.MenuItem(label="Theme")
+        theme_menu = Gtk.Menu()
+        theme_menu_item.set_submenu(theme_menu)
+        
+        current_theme = get_theme_preference(self._config_data)
+        self._theme_radios = []
+        for theme_val, label in [("system", "System"), ("light", "Light"), ("dark", "Dark")]:
+            if not self._theme_radios:
+                item = Gtk.RadioMenuItem(label=label)
+            else:
+                item = Gtk.RadioMenuItem.new_with_label_from_widget(self._theme_radios[0], label)
+            item.set_name(theme_val)
+            if theme_val == current_theme:
+                item.set_active(True)
+            item.connect("toggled", self._on_theme_toggled)
+            theme_menu.append(item)
+            self._theme_radios.append(item)
+            
+        view_menu.append(theme_menu_item)
+
         view_menu_item = Gtk.MenuItem(label="View")
         view_menu_item.set_submenu(view_menu)
         menubar.append(view_menu_item)
@@ -347,6 +374,24 @@ class MainWindow(Gtk.Window):
                 self._engine.apply_subtitle_style(
                     get_subtitle_style(self._config_data),
                 )
+
+    def _apply_theme(self) -> None:
+        theme = get_theme_preference(self._config_data)
+        if theme == "system":
+            is_dark = is_system_dark_mode()
+        else:
+            is_dark = (theme == "dark")
+        settings = Gtk.Settings.get_default()
+        if settings:
+            settings.set_property("gtk-application-prefer-dark-theme", is_dark)
+
+    def _on_theme_toggled(self, item: Gtk.RadioMenuItem) -> None:
+        if self._populating or not item.get_active():
+            return
+        theme_val = item.get_name()
+        set_theme_preference(self._config_data, theme_val)
+        self._save_config()
+        self._apply_theme()
 
     # ------------------------------------------------------------------
     # Sidebar management

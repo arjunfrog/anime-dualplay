@@ -8,6 +8,7 @@ scattering sys.platform checks everywhere.
 from __future__ import annotations
 
 import sys
+import subprocess
 
 IS_MACOS = sys.platform == "darwin"
 IS_LINUX = sys.platform.startswith("linux")
@@ -45,3 +46,29 @@ def has_pw_cli() -> bool:
         return False
     import shutil
     return shutil.which("pw-cli") is not None
+
+
+def is_system_dark_mode() -> bool:
+    """Detect if the operating system is currently in dark mode."""
+    if IS_MACOS:
+        try:
+            res = subprocess.run(
+                ["defaults", "read", "-g", "AppleInterfaceStyle"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return res.stdout.strip() == "Dark"
+        except subprocess.CalledProcessError:
+            return False
+    else:
+        try:
+            res = subprocess.run(
+                ["gsettings", "get", "org.gnome.desktop.interface", "color-scheme"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return "prefer-dark" in res.stdout
+        except Exception:
+            return False

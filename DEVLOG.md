@@ -2,6 +2,13 @@
 
 ## 2026-05-19
 
+### Dark Mode System Preference Integration
+
+- Added system dark mode detection (`is_system_dark_mode`) to `player/platform.py` for macOS and Linux.
+- Added `get_theme_preference` and `set_theme_preference` to `player/config.py`.
+- Added "Theme" submenu (System, Light, Dark) under "View" menu in GTK application.
+- `MainWindow` defaults to applying system's dark theme using GTK's `gtk-application-prefer-dark-theme`.
+
 ### macOS Cross-Platform Portability
 
 Made the player executable on macOS without modifying the original Linux
