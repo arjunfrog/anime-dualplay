@@ -1,5 +1,45 @@
 # Devlog
 
+## 2026-05-19
+
+### macOS Cross-Platform Portability
+
+Made the player executable on macOS without modifying the original Linux
+code paths. All platform-specific logic is centralised in a new
+`player/platform.py` abstraction module.
+
+**New files:**
+- `player/platform.py` — Constants and helpers for platform detection,
+  audio/video sink selection, log directory, and tool availability.
+- `tests/test_platform.py` — Tests for platform detection and constants.
+- `tests/test_cross_platform.py` — 26 tests validating GStreamer elements,
+  pipeline building, device discovery, and video sinks on the current OS.
+- `tests/test_video_widget.py` — Tests for platform-conditional VideoWidget
+  behaviour (Gtk.Box + gtksink on macOS vs DrawingArea + X11 overlay on Linux).
+
+**Modified files:**
+- `player/playback/pipeline_builder.py` — Uses `AUDIO_SINK_ELEMENT`
+  (`osxaudiosink` on macOS, `pulsesink` on Linux) and
+  `AUDIO_SINK_DEVICE_PROPERTY` (`unique-id` on macOS, `device` on Linux).
+  Skips PulseAudio-specific buffer tuning on macOS.
+- `player/devices.py` — Uses `unique-id` for sink identification on macOS
+  (CoreAudio) instead of `node.name` (PulseAudio). Skips `pactl` fallback and
+  `pw-cli`/`pw-dump` Bluetooth codec queries on macOS.
+- `ui/video_widget.py` — Rewritten to support both Linux (DrawingArea + X11
+  XID overlay) and macOS (Gtk.Box + gtksink widget embedding). GdkX11 import
+  is now guarded.
+- `app.py` — Uses `platform.get_log_directory()` for logs
+  (`~/Library/Application Support/` on macOS).
+- `tests/test_queue.py`, `tests/test_queue_controller.py` — Fixed path
+  comparisons for macOS `/tmp` → `/private/tmp` symlink resolution.
+
+**Environment setup:**
+- Requires `brew install gtk+3 gstreamer pygobject3` on macOS.
+- Uses `/opt/homebrew/bin/python3` (Homebrew Python 3.14) with `gi` bindings.
+- Virtual environment at `.venv` with `--system-site-packages` for gi access.
+
+**Test results:** 175 passed, 2 skipped, 0 failures.
+
 ## 2026-05-15
 
 ### Add Flatpak manifest

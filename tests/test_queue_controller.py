@@ -357,7 +357,7 @@ class TestLoadFromData:
         ctrl.load_from_data(data, 0)
         assert len(ctrl.queue.entries) == 2
         assert ctrl.queue.current_index == 0
-        assert ctrl.queue.current.media_path == Path("/tmp/a.mkv")
+        assert ctrl.queue.current.media_path == Path("/tmp/a.mkv").resolve()
 
     def test_to_data_roundtrip(self, wired_controller):
         ctrl, events = wired_controller

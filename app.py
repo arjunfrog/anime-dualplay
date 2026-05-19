@@ -19,7 +19,8 @@ from ui.main_window import MainWindow
 
 
 def _setup_logging() -> None:
-    log_dir = Path.home() / ".local" / "share" / "dual-audio-player"
+    from player.platform import get_log_directory
+    log_dir = Path(get_log_directory())
     log_dir.mkdir(parents=True, exist_ok=True)
 
     logger = logging.getLogger("dual_audio_player")

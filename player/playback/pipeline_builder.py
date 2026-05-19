@@ -18,6 +18,7 @@ gi.require_version("Gst", "1.0")
 from gi.repository import Gst  # noqa: E402
 
 from player.models import ListenerConfig, PlayerConfig, SubtitleStyle
+from player.platform import AUDIO_SINK_ELEMENT, AUDIO_SINK_DEVICE_PROPERTY, IS_MACOS
 from player.validation import clamp_delay_ms, clamp_volume, is_bluetooth_sink
 
 _logger = logging.getLogger("dual_audio_player")
@@ -106,19 +107,26 @@ class PipelineBuilder:
         resample = Gst.ElementFactory.make("audioresample", f"{branch_name}_resample")
         capsfilter = Gst.ElementFactory.make("capsfilter", f"{branch_name}_stereo_caps")
         volume = Gst.ElementFactory.make("volume", f"{branch_name}_volume")
-        sink = Gst.ElementFactory.make("pulsesink", f"{branch_name}_sink")
+        sink = Gst.ElementFactory.make(AUDIO_SINK_ELEMENT, f"{branch_name}_sink")
 
         if not all([queue, convert, resample, capsfilter, volume, sink]):
             raise RuntimeError(
-                "Could not create audio branch. Is the pulsesink plugin installed?"
+                f"Could not create audio branch. Is the {AUDIO_SINK_ELEMENT} plugin installed?"
             )
 
         capsfilter.set_property("caps", Gst.Caps.from_string("audio/x-raw,channels=2"))
         volume.set_property("volume", clamp_volume(listener.volume))
-        sink.set_property("device", listener.sink)
+        if listener.sink:
+            try:
+                sink.set_property(AUDIO_SINK_DEVICE_PROPERTY, listener.sink)
+            except Exception as exc:
+                _logger.warning(
+                    "Could not set %s=%s on %s: %s",
+                    AUDIO_SINK_DEVICE_PROPERTY, listener.sink, AUDIO_SINK_ELEMENT, exc,
+                )
         sink.set_property("sync", True)
 
-        if is_bluetooth_sink(listener.sink):
+        if is_bluetooth_sink(listener.sink) and not IS_MACOS:
             try:
                 sink.set_property("buffer-time", 50000)
                 sink.set_property("latency-time", 10000)
@@ -133,7 +141,7 @@ class PipelineBuilder:
         elif listener.delay_ms < 0:
             msg = (
                 f"Warning: {listener.label} has negative delay {listener.delay_ms} ms. "
-                "pulsesink cannot render before the pipeline clock; use positive "
+                "Audio sink cannot render before the pipeline clock; use positive "
                 "delay on the other branch instead."
             )
             if self._status_emitter:
@@ -153,7 +161,7 @@ class PipelineBuilder:
         if not capsfilter.link(volume):
             raise RuntimeError(f"Could not link {branch_name}: stereo caps -> volume")
         if not volume.link(sink):
-            raise RuntimeError(f"Could not link {branch_name}: volume -> pulsesink")
+            raise RuntimeError(f"Could not link {branch_name}: volume -> audio sink")
 
         return queue
 

@@ -30,17 +30,17 @@
     "thinkpad_usb_dac": {
       "listenerA": {
         "label": "Listener A",
-        "sink": "bluez_output.24_15_10_30_C1_07.1",
+        "sink": "~:AMS2_StackedOutput:0",
         "audioTrack": 0,
         "delayMs": 0,
-        "volume": 2.0
+        "volume": 1.0
       },
       "listenerB": {
         "label": "Listener B",
-        "sink": "alsa_output.usb-bestechnic_HUAWEI_USB-C_HEADSET_02968100000000000000000000000-00.analog-stereo",
-        "audioTrack": 1,
+        "sink": "~:AMS2_StackedOutput:0",
+        "audioTrack": 0,
         "delayMs": 0,
-        "volume": 1.45
+        "volume": 1.0
       },
       "video": {
         "enabled": true,
@@ -48,7 +48,7 @@
         "delayMs": 0
       },
       "subtitles": {
-        "enabled": true,
+        "enabled": false,
         "subtitleTrack": 0
       }
     }

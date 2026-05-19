@@ -13,6 +13,7 @@ gi.require_version("GLib", "2.0")
 from gi.repository import Gst, GLib  # noqa: E402
 
 from player.models import SinkInfo
+from player.platform import IS_MACOS, IS_LINUX
 
 _logger = logging.getLogger("dual_audio_player")
 
@@ -21,30 +22,37 @@ BT_ICON = "\U0001F50A"
 
 def list_sinks() -> int:
     """CLI-compatible: print available sinks to stdout."""
-    print("Available PulseAudio/PipeWire sinks:\n")
+    sink_type = "CoreAudio" if IS_MACOS else "PulseAudio/PipeWire"
+    print(f"Available {sink_type} sinks:\n")
     sinks = get_audio_sinks()
     if sinks:
         for s in sinks:
             default_marker = " (default)" if s.is_default else ""
             print(f"  {s.name}{default_marker}")
+            if s.description and s.description != s.name:
+                print(f"    ({s.description})")
         return 0
 
-    try:
-        result = subprocess.run(
-            ["pactl", "list", "short", "sinks"],
-            check=True,
-            text=True,
-            capture_output=True,
-        )
-        print(result.stdout.rstrip() or "No sinks returned by pactl.")
-        return 0
-    except FileNotFoundError:
-        print("pactl not found. Install pulseaudio-utils or pipewire-pulse tools.", file=sys.stderr)
-        return 1
-    except subprocess.CalledProcessError as exc:
-        print("pactl failed:", file=sys.stderr)
-        print(exc.stderr, file=sys.stderr)
-        return exc.returncode
+    if IS_LINUX:
+        try:
+            result = subprocess.run(
+                ["pactl", "list", "short", "sinks"],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            print(result.stdout.rstrip() or "No sinks returned by pactl.")
+            return 0
+        except FileNotFoundError:
+            print("pactl not found. Install pulseaudio-utils or pipewire-pulse tools.", file=sys.stderr)
+            return 1
+        except subprocess.CalledProcessError as exc:
+            print("pactl failed:", file=sys.stderr)
+            print(exc.stderr, file=sys.stderr)
+            return exc.returncode
+
+    print("No audio output devices found.", file=sys.stderr)
+    return 1
 
 
 def get_audio_sinks() -> list[SinkInfo]:
@@ -71,16 +79,27 @@ def get_audio_sinks() -> list[SinkInfo]:
                 if props is None:
                     continue
 
-                # node.name is the full PulseAudio sink name (e.g., alsa_output.pci-...)
-                sink_name = props.get_string("node.name")
+                if IS_MACOS:
+                    sink_name = props.get_string("unique-id")
+                else:
+                    sink_name = props.get_string("node.name")
                 if not sink_name:
                     continue
 
-                description = props.get_string("node.description")
-                if not description:
-                    description = props.get_string("device.profile.description") or sink_name
+                description = (
+                    props.get_string("node.description")
+                    or props.get_string("device.profile.description")
+                    or device.get_display_name()
+                    or sink_name
+                )
 
-                is_default = False  # GstDeviceMonitor doesn't expose default status
+                is_default = False
+                if IS_MACOS:
+                    try:
+                        _, val = props.get_boolean("is-default")
+                        is_default = val
+                    except Exception:
+                        pass
 
                 sinks.append(SinkInfo(
                     name=sink_name,
@@ -100,20 +119,21 @@ def get_audio_sinks() -> list[SinkInfo]:
             except Exception as exc:
                 _logger.debug("GstDeviceMonitor stop failed: %s", exc)
 
-    # Fallback: pactl list short sinks
-    try:
-        result = subprocess.run(
-            ["pactl", "list", "short", "sinks"],
-            check=True,
-            text=True,
-            capture_output=True,
-            timeout=5,
-        )
-        sinks = _parse_pactl_output(result.stdout)
-        if sinks:
-            return sinks
-    except Exception as exc:
-        _logger.debug("pactl sink discovery failed: %s", exc)
+    # Fallback: pactl list short sinks (Linux only)
+    if IS_LINUX:
+        try:
+            result = subprocess.run(
+                ["pactl", "list", "short", "sinks"],
+                check=True,
+                text=True,
+                capture_output=True,
+                timeout=5,
+            )
+            sinks = _parse_pactl_output(result.stdout)
+            if sinks:
+                return sinks
+        except Exception as exc:
+            _logger.debug("pactl sink discovery failed: %s", exc)
 
     return sinks
 
@@ -146,6 +166,8 @@ def _classify_sink(name: str) -> str:
 
 
 def get_bluetooth_codec(sink_name: str) -> Optional[str]:
+    if IS_MACOS:
+        return None
     if not sink_name.startswith("bluez_output."):
         return None
     try:
@@ -256,12 +278,18 @@ class DeviceMonitor:
             props = device.get_properties()
             if props is None:
                 continue
-            sink_name = props.get_string("node.name")
+            if IS_MACOS:
+                sink_name = props.get_string("unique-id")
+            else:
+                sink_name = props.get_string("node.name")
             if not sink_name:
                 continue
-            description = props.get_string("node.description")
-            if not description:
-                description = props.get_string("device.profile.description") or sink_name
+            description = (
+                props.get_string("node.description")
+                or props.get_string("device.profile.description")
+                or device.get_display_name()
+                or sink_name
+            )
             sinks.append(SinkInfo(
                 name=sink_name,
                 description=description,

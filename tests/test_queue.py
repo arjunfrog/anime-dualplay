@@ -14,7 +14,7 @@ class TestQueueEntry:
         assert d["status"] == "pending"
 
         restored = QueueEntry.from_dict(d)
-        assert restored.media_path == Path("/tmp/test.mkv")
+        assert restored.media_path == Path("/tmp/test.mkv").resolve()
         assert restored.status == "pending"
         assert restored.media_info is None
 
@@ -208,12 +208,12 @@ class TestQueueModel:
         data = q.to_dict()
         restored = QueueModel.from_dict_list(data, current_index=0)
         assert len(restored.entries) == 2
-        assert restored.entries[0].media_path == Path("/tmp/a.mkv")
+        assert restored.entries[0].media_path == Path("/tmp/a.mkv").resolve()
         assert restored.entries[0].status == "played"
-        assert restored.entries[1].media_path == Path("/tmp/b.mkv")
+        assert restored.entries[1].media_path == Path("/tmp/b.mkv").resolve()
         assert restored.entries[1].status == "pending"
         assert restored.current_index == 0
-        assert restored.current.media_path == Path("/tmp/a.mkv")
+        assert restored.current.media_path == Path("/tmp/a.mkv").resolve()
 
     def test_has_next_has_previous_edge_cases(self):
         q = QueueModel()
