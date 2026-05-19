@@ -51,6 +51,20 @@ sudo apt install \
 
 If AV1 video does not display, make sure `gstreamer1.0-libav` is installed. On some systems, hardware AV1 decode may still be awkward; testing with an H.264/H.265 MKV first is useful.
 
+macOS (Homebrew):
+
+```bash
+brew install gtk+3 gstreamer pygobject3
+```
+
+Ensure you use the Homebrew Python environment, as the macOS system Python lacks the necessary `gi` introspection bindings. You should create a virtual environment with system packages enabled to access `gi`:
+
+```bash
+/opt/homebrew/bin/python3 -m venv .venv --system-site-packages
+source .venv/bin/activate
+pip install pytest
+```
+
 ## Using the GUI
 
 Unpack .zip or clone repo  
